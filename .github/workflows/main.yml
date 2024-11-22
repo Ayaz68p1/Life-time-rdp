@@ -1,0 +1,67 @@
+name: Build and Deploy RustDesk on Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions/setup-rust@v1
+        with:
+          rust-version: stable
+
+      - name: Install dependencies
+        run: |
+          choco install cmake
+          choco install visualstudio2019buildtools
+          choco install mingw
+
+      - name: Build RustDesk
+        run: |
+          cargo build --release
+
+      - name: Package RustDesk for Windows
+        run: |
+          # Ensure all dependencies and resources are packed
+          mkdir -p output
+          cp target/release/rustdesk.exe output/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: rustdesk-windows
+          path: output/rustdesk.exe
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: rustdesk-windows
+
+      - name: Deploy to Server (Example for testing deployment)
+        run: |
+          # Command for deploying to a server or virtual machine
+          # For example, copying the artifact to a server for remote access testing
+          echo "Deploying RustDesk to the server"
+          
+          # Example of moving file to a destination
+          move rustdesk.exe C:\Path\To\Destination\
+
+      - name: Start RustDesk for Lifetime RDP (Example)
+        run: |
+          # Example command to start the application with a background process
+          start /B rustdesk.exe
